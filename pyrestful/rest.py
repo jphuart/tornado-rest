@@ -65,7 +65,7 @@ def config(func,method,**kwparams):
 	operation._query_params   = re.findall(r"(?<=<)\w+",path)
 	operation._path           = path
 	
-	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML, None]:
+	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML,mediatypes.TEXT_HTML, None]:
 		raise PyRestfulException("The media type used do not exist : "+operation.func_name)
 
 	return operation
@@ -166,7 +166,7 @@ class RestHandler(tornado.web.RequestHandler):
 					elif produces == mediatypes.APPLICATION_XML and hasattr(response,'__module__'):
 						response = convert2XML(response)
 
-					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
+					if (produces == mediatypes.APPLICATION_JSON and isinstance(response,dict)) or (produces == mediatypes.TEXT_HTML):
 						self.write(response)
 						self.finish()
 					elif produces == mediatypes.APPLICATION_JSON and isinstance(response,list):

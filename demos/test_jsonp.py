@@ -32,6 +32,15 @@ class JsonpService(pyrestful.rest.RestHandler):
         """
         return {"Hello":name}
     
+    @get(_path="/jsonplist/{name1}/{name2}/{callback}", _produces=mediatypes.APPLICATION_JSONP)
+    def helloList(self, name1, name2, callback):
+        """ 
+        JSONP with defined callback
+        """
+        mylist = [name1, name2]
+        
+        return mylist
+    
     @get(_path="/jsonpobject/{id}/{name}/{callback}", _produces=mediatypes.APPLICATION_JSONP)
     def helloObject(self, id, name, callback):
         """ 

@@ -1,4 +1,8 @@
 *.pyc
+*.orig
+.project
+.pydevproject
+.settings/
 pyrestful.egg-info/
 dist/
 build/

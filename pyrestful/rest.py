@@ -69,7 +69,12 @@ def config(func, method, **kwparams):
     operation._query_params = re.findall(r"(?<=<)\w+", path)
     operation._path = path
 
-    if not operation._produces in [mediatypes.APPLICATION_JSON, mediatypes.APPLICATION_XML, mediatypes.TEXT_XML, mediatypes.TEXT_HTML, None]:
+    if not operation._produces in [mediatypes.APPLICATION_JSON, 
+                                   mediatypes.APPLICATION_XML, 
+                                   mediatypes.TEXT_XML, 
+                                   mediatypes.TEXT_HTML, 
+                                   mediatypes.APPLICATION_JSONP, 
+                                   None]:
         raise PyRestfulException("The media type used do not exist : " + operation.func_name)
 
     return operation
@@ -122,6 +127,7 @@ class RestHandler(tornado.web.RequestHandler):
         self._exe('DELETE')
 
     def _exe(self, method):
+                
         """ Executes the python function for the Rest Service """
         request_path = self.request.path
         path = request_path.split('/')
@@ -148,7 +154,8 @@ class RestHandler(tornado.web.RequestHandler):
             consumes = getattr(operation, "_consumes")
             services_from_request = list(filter(lambda x: x in path, service_name))
             query_params = getattr(operation, "_query_params")
-
+            
+            
             if operation._method == self.request.method and service_name == services_from_request and len(service_params) + len(service_name) == len(services_and_params):
                 try:
                     params_values = self._find_params_value_of_url(
@@ -173,8 +180,15 @@ class RestHandler(tornado.web.RequestHandler):
                         return
 
                     self.set_header("Content-Type", produces)
+                    
+                    """ Define the default callback for JSONP if not provided"""
+                    if produces == mediatypes.APPLICATION_JSONP:
+                        if 'callback' in service_params:
+                            callback = p_values[service_params.index('callback')]
+                        else:
+                            callback = 'jsonp000'
 
-                    if produces == mediatypes.APPLICATION_JSON and hasattr(response, '__module__'):
+                    if produces == (mediatypes.APPLICATION_JSON or mediatypes.APPLICATION_JSONP) and hasattr(response, '__module__'):
                         response = convert2JSON(response)
                     elif produces == mediatypes.APPLICATION_XML and hasattr(response, '__module__'):
                         response = convert2XML(response)
@@ -187,6 +201,12 @@ class RestHandler(tornado.web.RequestHandler):
                         self.finish()
                     elif produces in [mediatypes.APPLICATION_XML, mediatypes.TEXT_XML] and isinstance(response, xml.dom.minidom.Document):
                         self.write(response.toxml())
+                        self.finish()
+                    elif (produces == mediatypes.APPLICATION_JSONP and isinstance(response, dict)):
+                        self.write('{0}({1})'.format(callback, response))
+                        self.finish()
+                    elif produces == mediatypes.APPLICATION_JSONP and isinstance(response, list):
+                        self.write('{0}({1})'.format(callback, json.dumps(response)))
                         self.finish()
                     else:
                         self.gen_http_error(

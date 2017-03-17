@@ -76,7 +76,7 @@ def config(func, method, **kwparams):
                                    mediatypes.APPLICATION_JSONP, 
                                    None]:
         raise PyRestfulException("The media type used do not exist : " + operation.func_name)
-
+    
     return operation
 
 
@@ -180,6 +180,7 @@ class RestHandler(tornado.web.RequestHandler):
                         return
 
                     self.set_header("Content-Type", produces)
+                    self.set_header('charset', 'utf-8')
                     
                     """ Define the default callback for JSONP if not provided"""
                     if produces == mediatypes.APPLICATION_JSONP:

@@ -69,14 +69,14 @@ def config(func, method, **kwparams):
     operation._query_params = re.findall(r"(?<=<)\w+", path)
     operation._path = path
 
-    if not operation._produces in [mediatypes.APPLICATION_JSON, 
-                                   mediatypes.APPLICATION_XML, 
-                                   mediatypes.TEXT_XML, 
-                                   mediatypes.TEXT_HTML, 
-                                   mediatypes.APPLICATION_JSONP, 
+    if not operation._produces in [mediatypes.APPLICATION_JSON,
+                                   mediatypes.APPLICATION_XML,
+                                   mediatypes.TEXT_XML,
+                                   mediatypes.TEXT_HTML,
+                                   mediatypes.APPLICATION_JSONP,
                                    None]:
         raise PyRestfulException("The media type used do not exist : " + operation.func_name)
-    
+
     return operation
 
 
@@ -127,7 +127,6 @@ class RestHandler(tornado.web.RequestHandler):
         self._exe('DELETE')
 
     def _exe(self, method):
-                
         """ Executes the python function for the Rest Service """
         request_path = self.request.path
         path = request_path.split('/')
@@ -154,8 +153,7 @@ class RestHandler(tornado.web.RequestHandler):
             consumes = getattr(operation, "_consumes")
             services_from_request = list(filter(lambda x: x in path, service_name))
             query_params = getattr(operation, "_query_params")
-            
-            
+
             if operation._method == self.request.method and service_name == services_from_request and len(service_params) + len(service_name) == len(services_and_params):
                 try:
                     params_values = self._find_params_value_of_url(
@@ -174,6 +172,18 @@ class RestHandler(tornado.web.RequestHandler):
                             body = str(self.request.body, 'utf-8')
                         param_obj = convertJSON2OBJ(params_types[0], json.loads(body))
                         p_values.append(param_obj)
+
+                    """ Define the default callback for JSONP if not provided"""
+                    if produces == mediatypes.APPLICATION_JSONP:
+                        if 'callback' in service_params:
+                            """ 
+                            sanitize the callback to avoid nasty injections
+                            """
+                            raw_callback = p_values[service_params.index('callback')]
+                            callback = re.findall(r"([a-zA-Z0-9]{1,32})", raw_callback)[0]
+                        else:
+                            callback = 'jsonp000'
+
                     response = operation(*p_values)
 
                     if response == None:
@@ -181,13 +191,6 @@ class RestHandler(tornado.web.RequestHandler):
 
                     self.set_header("Content-Type", produces)
                     self.set_header('charset', 'utf-8')
-                    
-                    """ Define the default callback for JSONP if not provided"""
-                    if produces == mediatypes.APPLICATION_JSONP:
-                        if 'callback' in service_params:
-                            callback = p_values[service_params.index('callback')]
-                        else:
-                            callback = 'jsonp000'
 
                     if produces == (mediatypes.APPLICATION_JSON or mediatypes.APPLICATION_JSONP) and hasattr(response, '__module__'):
                         response = convert2JSON(response)
@@ -225,6 +228,7 @@ class RestHandler(tornado.web.RequestHandler):
             if v != None:
                 values_of_query.append(v)
                 i += 1
+
         return values_of_query
 
     def _find_params_value_of_arguments(self, operation):
@@ -241,6 +245,7 @@ class RestHandler(tornado.web.RequestHandler):
                     values.append(None)
         elif len(self.request.arguments) == 0 and len(operation._query_params) > 0:
             values = [None] * (len(operation._func_params) - len(operation._service_params))
+
         return values
 
     def _convert_params_values(self, values_list, params_types):

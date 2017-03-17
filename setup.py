@@ -25,9 +25,9 @@ packages=['tornado','pyconvert']
 
 distutils.core.setup(
 	name='pyrestful',
-	version = '0.4.2',
+	version = '0.4.2.jph',
 	packages=['pyrestful','demos'],
-	author='Innovaser',
-	author_email='rancavil@innovaser.cl',
+	author='Innovaser, openjph',
+	author_email='rancavil@innovaser.cl, jph@openjph.be',
 	install_requires=packages
 )

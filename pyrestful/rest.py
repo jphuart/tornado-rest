@@ -74,6 +74,7 @@ def config(func, method, **kwparams):
                                    mediatypes.TEXT_XML,
                                    mediatypes.TEXT_HTML,
                                    mediatypes.APPLICATION_JSONP,
+                                   mediatypes.TEXT_CSV,
                                    None]:
         raise PyRestfulException("The media type used do not exist : " + operation.func_name)
 
@@ -197,7 +198,13 @@ class RestHandler(tornado.web.RequestHandler):
                     elif produces == mediatypes.APPLICATION_XML and hasattr(response, '__module__'):
                         response = convert2XML(response)
 
-                    if (produces == mediatypes.APPLICATION_JSON and isinstance(response, dict)) or (produces == mediatypes.TEXT_HTML):
+                    if (produces == mediatypes.APPLICATION_JSON and isinstance(response, dict)):
+                        self.write(response)
+                        self.finish()
+                    elif (produces == mediatypes.TEXT_HTML):
+                        self.write(response)
+                        self.finish()
+                    elif (produces == mediatypes.TEXT_CSV):
                         self.write(response)
                         self.finish()
                     elif produces == mediatypes.APPLICATION_JSON and isinstance(response, list):

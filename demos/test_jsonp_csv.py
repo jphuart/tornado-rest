@@ -17,6 +17,15 @@ class MyObject(object):
         return '{0} - {1}'.format(self.id_object, self.name_object)
 
 class JsonpService(pyrestful.rest.RestHandler):
+    @get(_path="/csv/{name}", _produces=mediatypes.TEXT_CSV)
+    def sayHelloCSV(self, name):
+        """
+        CSV data
+        """
+        mydata = "{0},b,c\n1,2,3\n4,5,6\n".format(name)
+        
+        return mydata
+    
     @get(_path="/jsonp/{name}/{callback}", _produces=mediatypes.APPLICATION_JSONP)
     def sayHello(self, name, callback):
         """
@@ -52,7 +61,7 @@ class JsonpService(pyrestful.rest.RestHandler):
 
 if __name__ == '__main__':
     try:
-        print("Start the jsonp service")
+        print("Start the jsonp csv service")
         app = pyrestful.rest.RestService([JsonpService])
         app.listen(8080)
         tornado.ioloop.IOLoop.instance().start()
